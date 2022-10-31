@@ -3,6 +3,7 @@ package types
 import (
 	"encoding"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 )
 
@@ -71,10 +72,24 @@ func (c ConfigDigest) String() string {
 }
 
 var _ encoding.TextMarshaler = ConfigDigest{}
+var _ encoding.TextUnmarshaler = &ConfigDigest{}
 
 func (c ConfigDigest) MarshalText() (text []byte, err error) {
 	s := c.String()
 	return []byte(s), nil
+}
+
+func (c *ConfigDigest) UnmarshalText(text []byte) error {
+	b, err := hex.DecodeString(string(text))
+	if err != nil {
+		return err
+	}
+	cd, err := BytesToConfigDigest(b)
+	if err != nil {
+		return err
+	}
+	*c = cd
+	return nil
 }
 
 // An OffchainConfigDigester computes a ConfigDigest the same way as the
