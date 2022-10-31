@@ -667,7 +667,7 @@ contract OCR2Aggregator is OCR2Abstract, OwnerIsCreator, AggregatorV2V3Interface
 
     // Verify signatures attached to report
     {
-      bytes32 h = keccak256(abi.encodePacked(keccak256(report), reportContext));
+      bytes32 h = keccak256(abi.encode(keccak256(report), reportContext));
 
       // i-th byte counts number of sigs made by i-th signer
       uint256 signedCount = 0;
