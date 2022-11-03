@@ -203,12 +203,17 @@ func (t *transmissionState) eventTransmit(ev EventTransmit) {
 	now := time.Now()
 	delayMaybe := t.transmitDelay(ev.Epoch, ev.Round)
 	if delayMaybe == nil {
+		t.logger.Debug("eventTransmit(ev): delay is nil, dropping transmission", commontypes.LogFields{
+			"ev": ev,
+		})
 		return
 	}
 	delay := *delayMaybe
 
+	nowPlusDelay := now.Add(delay)
+
 	transmission := types.PendingTransmission{
-		now.Add(delay),
+		nowPlusDelay,
 		ev.H,
 		ev.AttestedReport.Report,
 		ev.AttestedReport.AttributedSignatures,
@@ -222,26 +227,52 @@ func (t *transmissionState) eventTransmit(ev EventTransmit) {
 
 	t.times.Push(MinHeapTimeToPendingTransmissionItem{ts, transmission})
 
+	t.logger.Debug("eventTransmit: added to heap", commontypes.LogFields{
+		"ev":           ev,
+		"delay":        delay.String(),
+		"nowPlusDelay": nowPlusDelay.String(),
+		"heap":         t.times.DebugString(),
+	})
+
 	next := t.times.Peek()
+	t.logger.Debug("eventTransmit: top heap item", commontypes.LogFields{
+		"ev":           ev,
+		"item":         next,
+		"delay":        delay.String(),
+		"nowPlusDelay": nowPlusDelay.String(),
+	})
 	if (EpochRound{ev.Epoch, ev.Round}) == (EpochRound{next.Epoch, next.Round}) {
+		t.logger.Debug("eventTransmit: resetting tTransmit", nil)
 		t.tTransmit = time.After(delay)
+	} else {
+		t.logger.Debug("eventTransmit: skipping tTransmit", nil)
 	}
 }
 
 func (t *transmissionState) eventTTransmitTimeout() {
-	fmt.Println("BALLS eventTTransmitTimeout")
+	t.logger.Debug("eventTTransmitTimeout", nil)
 	defer func() {
 		if t.times.Len() != 0 { // If there's other transmissions due later...
 			// ...reset timer to expire when the next one is due
 			item := t.times.Peek()
+			t.logger.Debug("eventTTransmitTimeout: resetting tTransmit with item", commontypes.LogFields{
+				"item": item,
+			})
 			t.tTransmit = time.After(time.Until(item.Time))
+		} else {
+			t.logger.Debug("eventTTransmitTimeout: nothing left on heap", nil)
 		}
 	}()
 
 	if t.times.Len() == 0 {
+		t.logger.Warn("eventTTransmitTimeout: heap is empty, this should not happen", nil)
 		return
 	}
 	item := t.times.Pop()
+
+	t.logger.Debug("eventTTransmitTimeout: top heap item", commontypes.LogFields{
+		"item": item,
+	})
 
 	select {
 	case t.chPersist <- persist.TransmissionDBUpdate{

@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"container/heap"
+	"fmt"
 
 	"github.com/smartcontractkit/libocr/offchainreporting2/types"
 )
@@ -9,6 +10,14 @@ import (
 // Type safe wrapper around MinHeapTimeToContractReportInternal
 type MinHeapTimeToPendingTransmission struct {
 	internal MinHeapTimeToPendingTransmissionInternal
+}
+
+func (h *MinHeapTimeToPendingTransmission) DebugString() string {
+	s := ""
+	for _, item := range h.internal {
+		s += fmt.Sprintf("[e: %v r: %v t: %v] ", item.Epoch, item.Round, item.Time)
+	}
+	return s
 }
 
 func (h *MinHeapTimeToPendingTransmission) Push(item MinHeapTimeToPendingTransmissionItem) {
