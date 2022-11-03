@@ -639,6 +639,7 @@ func (nm *numericalMedian) ShouldTransmitAcceptedReport(ctx context.Context, rep
 
 	contractConfigDigest, contractEpoch, contractRound, _, _, err := nm.contractTransmitter.LatestTransmissionDetails(ctx)
 	if err != nil {
+		fmt.Println("BALLS error in ShouldTransmitAcceptedReport", err)
 		return false, err
 	}
 
@@ -660,6 +661,8 @@ func (nm *numericalMedian) ShouldTransmitAcceptedReport(ctx context.Context, rep
 		})
 		return false, nil
 	}
+
+	fmt.Println("BALLS ShouldTransmitAcceptedReport success")
 
 	return true, nil
 }

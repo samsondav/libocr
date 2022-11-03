@@ -3,6 +3,7 @@ package protocol
 import (
 	"context"
 	"encoding/binary"
+	"fmt"
 	"time"
 
 	"github.com/smartcontractkit/libocr/commontypes"
@@ -155,6 +156,7 @@ func (t *transmissionState) restoreFromDatabase() {
 
 // eventTransmit is called when the local process sends a transmit event
 func (t *transmissionState) eventTransmit(ev EventTransmit) {
+	fmt.Println("BALLS eventTransmit")
 	t.logger.Debug("Received transmit event", commontypes.LogFields{
 		"event": ev,
 	})
@@ -227,6 +229,7 @@ func (t *transmissionState) eventTransmit(ev EventTransmit) {
 }
 
 func (t *transmissionState) eventTTransmitTimeout() {
+	fmt.Println("BALLS eventTTransmitTimeout")
 	defer func() {
 		if t.times.Len() != 0 { // If there's other transmissions due later...
 			// ...reset timer to expire when the next one is due
