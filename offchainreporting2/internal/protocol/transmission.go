@@ -150,7 +150,7 @@ func (t *transmissionState) restoreFromDatabase() {
 
 	// if queue isn't empty, set tTransmit to expire at next transmission time
 	if t.times.Len() != 0 {
-		t.tTransmit = time.After(now.Sub(t.times.Peek().Time))
+		t.tTransmit = time.After(time.Until(t.times.Peek().Time))
 	}
 }
 
